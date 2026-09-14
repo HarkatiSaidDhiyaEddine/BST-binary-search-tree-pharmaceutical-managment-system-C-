@@ -1,4 +1,4 @@
-# Pharmaceutical Laboratory Management System 
+# Pharmaceutical Laboratory Management System
 
 A C++ console application that manages a pharmaceutical laboratory's drugs. Each
 drug is stored as a node in a **Binary Search Tree keyed by drug number**, and each
@@ -6,84 +6,86 @@ node keeps a **doubly linked list of the products** needed to manufacture it. Th
 menu lets a user add, search, update, and delete drugs, manage their ingredient
 lists, group drugs by category, and export the whole catalogue to a text file.
 
-This repository contains a **clean refactored rewrite** of the original
-single-file program: the tree logic is encapsulated in its own class, several
-latent bugs are fixed, and the code is written in portable **C++98** so it builds
-on both modern compilers and the classic **Dev-C++ (GCC 3.4.2)** toolchain.
+This repository contains a **clean implementation** of the program: the tree
+logic is encapsulated in its own class, the input and file-handling logic is
+organised into dedicated components, and the code is written in portable
+**C++98** so it builds on both modern compilers and the classic **Dev-C++ (GCC 3.4.2)**
+toolchain.
 
 ---
 
 ## Table of Contents
 
-- [Features](#features)
-- [What changed in this refactor](#what-changed-in-this-refactor)
-- [Code structure](#code-structure)
-- [Getting started](#getting-started)
-- [Menu reference](#menu-reference)
-- [Example session](#example-session)
-- [Saved file format](#saved-file-format)
-- [Testing](#testing)
-- [Credits](#credits)
+* [Features](#features)
+* [Implementation improvements](#implementation-improvements)
+* [Code structure](#code-structure)
+* [Getting started](#getting-started)
+* [Menu reference](#menu-reference)
+* [Example session](#example-session)
+* [Saved file format](#saved-file-format)
+* [Testing](#testing)
+* [Credits](#credits)
 
 ---
 
 ## Features
 
 **Drug management**
-- Add a drug with a unique number, label, unit price, and category.
-- List every drug, sorted by number (in-order tree traversal).
-- Show the full details of one drug, including its ingredient list.
-- Delete a drug by number (handles all three BST deletion cases).
+
+* Add a drug with a unique number, label, unit price, and category.
+* List every drug, sorted by number (in-order tree traversal).
+* Show the full details of one drug, including its ingredient list.
+* Delete a drug by number (handles all three BST deletion cases).
 
 **Product (ingredient) management**
-- Attach a list of products, each with a quantity, to a drug.
-- Remove a single product from a drug.
-- Find every drug that uses a given product.
-- Rename a product across every drug in one pass.
+
+* Attach a list of products, each with a quantity, to a drug.
+* Remove a single product from a drug.
+* Find every drug that uses a given product.
+* Rename a product across every drug in one pass.
 
 **Category management**
-- List all unique categories.
-- Group and display drugs by category.
-- Delete every drug belonging to a category.
+
+* List all unique categories.
+* Group and display drugs by category.
+* Delete every drug belonging to a category.
 
 **Persistence**
-- Save the whole catalogue to a text file as a fresh snapshot.
+
+* Save the whole catalogue to a text file as a fresh snapshot.
 
 ---
 
-## What changed in this refactor
+## Implementation improvements
 
-The behaviour is the same as the original program, but the implementation was
-reorganised and three real bugs were fixed.
+The program is organised into dedicated components to keep the data structures,
+operations, input handling, and user interface clear and maintainable.
 
 ### Structure
 
-- **Encapsulation.** All tree operations and the root pointer now live inside a
+* **Encapsulation.** All tree operations and the root pointer now live inside a
   single `DrugInventory` class. `main()` only prints the menu and reads input —
   it never touches a `Drug*` directly.
-- **Single responsibility helpers.** Insertion, search, minimum, deletion, the
+* **Single responsibility helpers.** Insertion, search, minimum, deletion, the
   in-order walks, and the category grouping are small private static methods,
   each doing one thing.
-- **Input handling.** Two helpers (`promptValue<T>` and `promptLine`) replace the
+* **Input handling.** Two helpers (`promptValue<T>` and `promptLine`) replace the
   original mix of `cin >>` and `getline`. The new helpers consume the rest of the
-  line after a numeric read, so stray newlines can no longer desynchronise the
-  prompts, and corrupt input is cleared instead of sending the menu into an
-  infinite loop.
-- **Portable data types.** Prices use `double`; the code avoids `nullptr`, range-
+  line after a numeric read, so stray newlines do not interfere with the prompts,
+  and invalid input is handled with a re-prompt.
+* **Portable data types.** Prices use `double`; the code avoids `nullptr`, range-
   based `for`, `auto`, and `enum class` so it compiles under C++98.
-
-### Bug fixes
-
-| # | Original behaviour | Fix |
-|---|--------------------|-----|
-| 1 | `displayDrugCategories` used a function-local `static set` plus a dummy `root->number == root->number` guard. Categories printed on every recursive call and persisted between invocations. | Collect categories into a local `set<string>` in one traversal, then print once. |
-| 2 | `saveDrugTreeToFile` opened the file with `ios::app`, and opened/closed it on **every** node — slow, and repeated saves duplicated the data. | Open the stream once with truncation, write the whole tree, close once. |
-| 3 | `deleteDrugsByCategory` deleted nodes in the middle of a traversal by re-searching the tree from the root, which is fragile. | Collect the matching drug numbers first, then delete them one by one. |
-| 4 | `removeProduct` gave the same message whether the drug or the product was missing. | Return a `RemoveOutcome` (`Remove_Ok` / `Remove_DrugMissing` / `Remove_ProductMissing`) and report the exact cause. |
-| 5 | `displayDrugs` printed only the label. | The list now shows number, label, category, and price. |
-
-The tree is also fully freed in the `DrugInventory` destructor, and a rejected
-duplicate is deleted instead of being leaked.
+* **Category management.** Categories are collected into a local
+  `set<string>` during traversal before being displayed.
+* **File handling.** The catalogue is written using a single file stream and
+  saved as a fresh snapshot rather than accumulating previous data.
+* **Deletion management.** Drugs matching a category are collected first and
+  then removed from the tree in a controlled sequence.
+* **Operation results.** Product removal uses a `RemoveOutcome` value to
+  distinguish between a missing drug and a missing product.
+* **Drug listing.** The list displays the drug number, label, category, and price.
+* **Memory management.** The complete tree and its associated product lists are
+  released by the `DrugInventory` destructor.
 
 ---
 
@@ -91,7 +93,7 @@ duplicate is deleted instead of being leaked.
 
 Everything lives in one file, `drug_inventory.cpp`, laid out top to bottom as:
 
-```
+```text
 Product            // ingredient: name + quantity
 Drug               // BST node: number, label, price, category, product list, left/right
 RemoveOutcome      // enum returned by removeProduct
@@ -109,8 +111,8 @@ printMenu, promptValue, promptLine, readProducts   // UI helpers
 main()                                             // the menu loop
 ```
 
-- `list`, `map`, `set`, and `vector` come from the C++ STL.
-- The BST key is the drug **number**; in-order traversal therefore lists drugs in
+* `list`, `map`, `set`, and `vector` come from the C++ STL.
+* The BST key is the drug **number**; in-order traversal therefore lists drugs in
   ascending number order.
 
 ---
@@ -158,7 +160,7 @@ and new toolchains alike.
 
 ## Menu reference
 
-```
+```text
 --- Pharmaceutical Laboratory Management ---
  1. Add a new drug
  2. Add products to a drug
@@ -179,7 +181,7 @@ and new toolchains alike.
 
 ## Example session
 
-```
+```text
 1                                  # add a drug
 50
 Paracetamol
@@ -245,7 +247,7 @@ Goodbye.
 
 Option **11** writes a snapshot such as `drugs.txt`:
 
-```
+```text
 Drug Number: 50
 Label: Paracetamol
 Unit Price: 4.5
@@ -256,7 +258,7 @@ Products:
 ----------------------
 ```
 
-Each save overwrites the file with a fresh snapshot (no duplicated appends).
+Each save overwrites the file with a fresh snapshot.
 
 ---
 
@@ -265,19 +267,19 @@ Each save overwrites the file with a fresh snapshot (no duplicated appends).
 The program was built with the Dev-C++ MinGW toolchain (GCC 3.4.2) and exercised
 end to end. Verified behaviours include:
 
-- Drugs listed in ascending number order after an out-of-order insertion sequence.
-- Duplicate drug numbers rejected (`A drug numbered 50 already exists.`).
-- BST deletion for leaf, single-child, and two-child nodes.
-- Adding/removing products, including the "drug missing" vs "product missing" paths.
-- Category listing returns each category exactly once.
-- Grouping by category and deleting a category both behave correctly.
-- Saving to file produces a sorted, non-duplicated snapshot.
-- Invalid numeric input is rejected with a re-prompt instead of looping forever.
+* Drugs listed in ascending number order after an out-of-order insertion sequence.
+* Duplicate drug numbers are rejected.
+* BST deletion for leaf, single-child, and two-child nodes.
+* Adding and removing products, including separate handling for missing drugs
+  and missing products.
+* Category listing returns each category exactly once.
+* Grouping by category and deleting a category both behave correctly.
+* Saving to file produces a sorted snapshot.
+* Invalid numeric input is rejected with a re-prompt instead of looping forever.
 
 ---
 
 ## Credits
 
-- Original program and initial README: **harkati said dhiya eddine**
+* Original program and initial README: **harkati said dhiya eddine**
   ([github.com/HarkatiSaidDhiyaEddine](https://github.com/HarkatiSaidDhiyaEddine)).
-
