@@ -1,0 +1,46 @@
+Drug Number: 20
+Label: Azithromycin
+Unit Price: 15.5
+Category: Antibiotic
+Products:
+----------------------
+Drug Number: 30
+Label: Amoxicillin
+Unit Price: 12
+Category: Antibiotic
+Products:
+- Amoxicillin raw (Quantity: 20)
+----------------------
+Drug Number: 40
+Label: Aspirin
+Unit Price: 3.75
+Category: Analgesic
+Products:
+----------------------
+Drug Number: 50
+Label: Paracetamol
+Unit Price: 4.5
+Category: Analgesic
+Products:
+- Paracetamol powder (Quantity: 10)
+- Corn starch (Quantity: 5)
+----------------------
+Drug Number: 60
+Label: Ceftriaxone
+Unit Price: 20
+Category: Antibiotic
+Products:
+----------------------
+Drug Number: 70
+Label: Ibuprofen
+Unit Price: 6.25
+Category: Analgesic
+Products:
+- Ibuprofen powder (Quantity: 15)
+----------------------
+Drug Number: 80
+Label: Vitamin C
+Unit Price: 2
+Category: Supplement
+Products:
+----------------------
