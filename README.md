@@ -1,0 +1,2 @@
+# BST-binary-search-tree-pharmaceutical-managment-system-C-
+A C++ console application that manages a pharmaceutical laboratory's drugs. Each drug a node in a **Binary Search Tree keyed by drug number**, and each node keeps a **doubly linked list of the products** needed to manufacture it. The menu lets a user add, search, update, and delete drugs, manage their ingredient lists, group drugs by category,
